@@ -5,12 +5,12 @@ var state = {
   over: false,
   turn: 'b',
   board: [
-    [null,'w',null, 'w', null, 'w',  null, 'w',  null, 'w'],
+    [null,'w',null, 'w', null, 'w',  null, null,  null, 'w'],
     ['w',null,'w',null,'w',null,'w',null,'w',null],
-    [null,'w',null,'w',null,'w',null,'w',null,'w'],
+    [null,'w',null,'w',null,null,null,'w',null,'w'],
     ['w',null,'w',null,'w',null,'w',null,'w',null],
     [null, null, null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null, null, null],
+    [null, null, 'w', null, null, null, null, null, null, null],
     [null,'b',null,'b',null,'b',null,'b',null,'b'],
     ['b',null,'b',null,'b',null,'b',null,'b',null],
     [null,'b',null,'b',null,'b',null,'b',null,'b'],
@@ -197,3 +197,72 @@ function nextTurn() {
   if(state.turn === 'b') state.turn = 'w';
   else state.turn = 'b';
 }
+
+/**@function highlightLegalMoves
+ * Highlights squares of given moves
+ * @param moves - set of moves to be highlighted
+ */
+function highlightLegalMoves(moves){
+  moves.forEach(function(move){
+    var x, y;
+    if(move.type === "slide") {
+      x = move.x;
+      y = move.y;
+    } else {
+      x = move.landings[0].x;
+      y = move.landings[0].y;
+      //set following jumped squares
+      for (var i = 1; i < move.landings.length; i++){
+        var jumpedSquare = document.getElementById("square-"+move.landings[i].x+"-"+move.landings[i].y);
+        jumpedSquare.classList.add('followingJump');
+      }
+      //set potentially captured pieces
+      for (var i = 0; i < move.captures.length; i++) {
+        var capturedPiece = document.getElementById("square-"+move.captures[i].x+"-"+move.captures[i].y).children[0];
+        capturedPiece.classList.add('endangeredPiece');
+      }
+    }
+    //set slided or first jumped square
+    document.getElementById("square-"+x+"-"+y).classList.add('legalMove');
+  })
+}
+
+/**@function handleCheckerClick
+ * Click handle for checker
+ */
+function handleCheckerClick(event) {
+  event.preventDefault();
+  var parentId = event.target.parentElement.id;
+  var x = parseInt(parentId[7]);
+  var y = parseInt(parentId[9]);
+  var moves = getLegalMoves(state.board[y][x], x, y);
+  highlightLegalMoves(moves);
+  console.log(x,y);
+}
+
+/** @function setup
+ * Sets up the game environment
+ */
+function setup(){
+  var board = document.createElement('section');
+  board.id = 'game-board';
+  document.body.appendChild(board);
+  for(var y = 0; y < state.board.length; y++) {
+    for (var x = 0; x < state.board[y].length; x++){
+      var square = document.createElement('div');
+      square.id = "square-" + x + "-" + y;
+      square.classList.add('square');
+      if((y+x) % 2 === 1) square.classList.add('black');
+      board.appendChild(square);
+      if(state.board[y][x]) {
+        var checker = document.createElement('div');
+        checker.classList.add('checker');
+        checker.classList.add('checker-' + state.board[y][x]);
+        checker.onclick = handleCheckerClick;
+        square.appendChild(checker);
+      }
+    }
+  }
+}
+
+setup();
