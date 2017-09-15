@@ -248,6 +248,83 @@ function renderBoard() {
   }
 }
 
+function boardPosition(x, y) {
+  var boardX = Math.floor(x / 50);
+  var boardY = Math.floor(y / 50);
+  return {x: boardX, y: boardY}
+}
+
+function handleMouseDown(event) {
+  var position = boardPosition(event.clientX, event.clientY);
+  var x = position.x;
+  var y = position.y;
+  if(x < 0 || y < 0 || x > 9 || y > 9) return;
+  // Make sure we're over the current player
+  if(state.board[y][x] && state.board[y][x].charAt(0) === state.turn) {
+    // pick up piece
+    state.movingPiece = {
+      piece: state.board[y][x],
+      startPosition: {x: x, y: y},
+      currentPosition: boardPosition(event.clientX,event.clientY)
+    }
+    state.action = "dragging";
+    state.board[y][x] = null;
+    renderBoard();
+  }
+}
+
+function handleMouseUp(event) {
+  if(state.action !== 'dragging') return;
+  var position = boardPosition(event.clientX, event.clientY);
+  var x = position.x;
+  var y = position.y;
+  if(x < 0 || y < 0 || x > 9 || y > 9) {
+    // Release off board; rubberband back to startPosition
+    var sx = state.movingPiece.startPosition.x;
+    var sy = state.movingPiece.startPosition.y;
+    state.board[sy][sx] = state.movingPiece.piece;
+    state.movingPiece = null;
+    state.action = "idle";
+    renderBoard();
+    return;
+  };
+  // If the drop is part of a legal move...
+  if(true) {
+    var lx = state.movingPiece.currentPosition.x;
+    var ly = state.movingPiece.currentPosition.y;
+    state.board[ly][lx] = state.movingPiece.piece;
+    state.movingPiece = null;
+    state.action = "idle";
+    renderBoard();
+    return;
+  }
+}
+
+function renderDragging() {
+  renderBoard();
+
+  // Render our ghost checker
+  ctx.fillStyle = '#555';
+  ctx.beginPath();
+  ctx.arc(
+    state.movingPiece.startPosition.x*100+50,
+    state.movingPiece.startPosition.y*100+50,
+    40, 0, Math.PI * 2
+  );
+  ctx.fill();
+
+  // Render our moving checker
+  ctx.strokeStyle = 'yellow';
+  ctx.beginPath();
+  ctx.arc(
+    state.movingPiece.currentPosition.x*100+50,
+    state.movingPiece.currentPosition.y*100+50,
+    40, 0, Math.PI * 2
+  );
+  ctx.stroke();
+
+}
+
 function handleMouseMove(event) {
   renderBoard();
   switch(state.action) {
@@ -255,6 +332,9 @@ function handleMouseMove(event) {
       hoverOverChecker(event);
       break;
     case 'dragging':
+      state.movingPiece.currentPosition =
+        boardPosition(event.clientX, event.clientY);
+      renderDragging();
       break;
   }
 }
@@ -287,6 +367,8 @@ function setup() {
   var canvas = document.createElement('canvas');
   canvas.width = 1000;
   canvas.height = 1000;
+  canvas.onmousedown = handleMouseDown;
+  canvas.onmouseup = handleMouseUp;
   canvas.onmousemove = handleMouseMove;
   document.body.appendChild(canvas);
   ctx = canvas.getContext('2d');
