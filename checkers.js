@@ -2,6 +2,7 @@
 
 /** The state of the game */
 var state = {
+  action: 'idle',
   over: false,
   turn: 'b',
   board: [
@@ -229,13 +230,24 @@ function renderBoard() {
   }
 }
 
+function handleMouseMove(event) {
+  switch(state.action) {
+    case 'idle':
+          hoverOverChecker(event);
+          break;
+    case 'dragging':
+          break;
+  }
+}
+
 function hoverOverChecker(event) {
   if(!ctx) return;
-  var x = Math.floor(event.clientX / 100);
-  var y = Math.floor(event.clientY / 100);
+  var x = Math.floor(event.clientX / 50);
+  var y = Math.floor(event.clientY / 50);
   console.log(x, y);
   if(state.board[y][x] && state.board[y][x].charAt(0) === state.turn) {
     ctx.strokeStyle = "yellow";
+    ctx.strokeWidth = 3;
     ctx.beginPath();
     ctx.arc(x*100+50, y*100+50, 40, 0, Math.PI * 2);
     ctx.stroke();
@@ -246,7 +258,7 @@ function setup() {
   var canvas = document.createElement('canvas');
   canvas.width = 1000;
   canvas.height = 1000;
-  canvas.onmousemove = hoverOverChecker;
+  canvas.onmousemove = handleMouseMove;
   document.body.appendChild(canvas);
   ctx = canvas.getContext('2d');
   renderBoard();
