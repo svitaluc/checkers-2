@@ -19,6 +19,8 @@ var state = {
   captures: {w: 0, b: 0}
 }
 
+var ctx;
+
 /** @function getLegalMoves
   * returns a list of legal moves for the specified
   * piece to make.
@@ -203,3 +205,51 @@ function nextTurn() {
   if(state.turn === 'b') state.turn = 'w';
   else state.turn = 'b';
 }
+
+function renderBoard() {
+  if(!ctx) return;
+  for(var y = 0; y < 10; y++) {
+    for(var x = 0; x < 10; x++) {
+      if((x + y) % 2 == 1) {
+        ctx.fillStyle = '#888';
+        ctx.fillRect(x*100, y*100, 100, 100);
+        if(state.board[y][x]) {
+          ctx.beginPath();
+          if(state.board[y][x].charAt(0) === 'w') {
+            ctx.fillStyle = '#fff';
+          } else {
+            ctx.fillStyle = '#000';
+          }
+          ctx.arc(x*100+50, y*100+50, 40, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      }
+    }
+  }
+}
+
+function hoverOverChecker(event) {
+  if(!ctx) return;
+  var x = Math.floor(event.clientX / 100);
+  var y = Math.floor(event.clientY / 100);
+  console.log(x, y);
+  if(state.board[y][x] && state.board[y][x].charAt(0) === state.turn) {
+    ctx.strokeStyle = "yellow";
+    ctx.beginPath();
+    ctx.arc(x*100+50, y*100+50, 40, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function setup() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 1000;
+  canvas.height = 1000;
+  canvas.onmousemove = hoverOverChecker;
+  document.body.appendChild(canvas);
+  ctx = canvas.getContext('2d');
+  renderBoard();
+}
+
+setup();
